@@ -1,4 +1,4 @@
-const words = [
+const allWords = [
   {
     a: "звОнит",
     b: "звонИт",
@@ -48,11 +48,113 @@ const words = [
     a: "балОванный",
     b: "баловАнный",
     correct: "балОванный"
+  },
+  {
+    a: "дОсуг",
+    b: "досУг",
+    correct: "досУг"
+  },
+  {
+    a: "жалЮзи",
+    b: "жалюзИ",
+    correct: "жалюзИ"
+  },
+  {
+    a: "цемЕнт",
+    b: "цЕмент",
+    correct: "цемЕнт"
+  },
+  {
+    a: "свЁкла",
+    b: "свеклА",
+    correct: "свЁкла"
+  },
+  {
+    a: "щАвель",
+    b: "щавЕль",
+    correct: "щавЕль"
+  },
+  {
+    a: "оптОвый",
+    b: "Оптовый",
+    correct: "оптОвый"
+  },
+  {
+    a: "включИт",
+    b: "вклЮчит",
+    correct: "включИт"
+  },
+  {
+    a: "облегчИть",
+    b: "облЕгчить",
+    correct: "облегчИть"
+  },
+  {
+    a: "углубИть",
+    b: "углУбить",
+    correct: "углубИть"
+  },
+  {
+    a: "начАв",
+    b: "нАчав",
+    correct: "начАв"
+  },
+  {
+    a: "понЯв",
+    b: "пОняв",
+    correct: "понЯв"
+  },
+  {
+    a: "принЯв",
+    b: "прИняв",
+    correct: "принЯв"
+  },
+  {
+    a: "созЫв",
+    b: "сОзыв",
+    correct: "созЫв"
+  },
+  {
+    a: "принУдить",
+    b: "прИнудить",
+    correct: "принУдить"
+  },
+  {
+    a: "шАрфы",
+    b: "шарфЫ",
+    correct: "шАрфы"
+  },
+  {
+    a: "бАнты",
+    b: "бантЫ",
+    correct: "бАнты"
+  },
+  {
+    a: "крАны",
+    b: "кранЫ",
+    correct: "крАны"
+  },
+  {
+    a: "чЕрпать",
+    b: "черпАть",
+    correct: "чЕрпать"
+  },
+  {
+    a: "плодоносИть",
+    b: "плодонОсить",
+    correct: "плодоносИть"
+  },
+  {
+    a: "вероисповЕдание",
+    b: "вероисповедАние",
+    correct: "вероисповЕдание"
   }
 ];
 
+let words = [];
 let currentQuestion = 0;
 let score = 0;
+let mistakes = [];
 
 const progress = document.getElementById("progress");
 const optionA = document.getElementById("optionA");
@@ -62,10 +164,27 @@ const quiz = document.getElementById("quiz");
 const result = document.getElementById("result");
 const scoreText = document.getElementById("scoreText");
 const resultText = document.getElementById("resultText");
+const mistakesList = document.getElementById("mistakesList");
 
 if (window.Telegram && window.Telegram.WebApp) {
   window.Telegram.WebApp.ready();
   window.Telegram.WebApp.expand();
+}
+
+function shuffleArray(array) {
+  return array.sort(() => Math.random() - 0.5);
+}
+
+function startQuiz() {
+  words = shuffleArray([...allWords]).slice(0, 10);
+  currentQuestion = 0;
+  score = 0;
+  mistakes = [];
+
+  result.classList.add("hidden");
+  quiz.classList.remove("hidden");
+
+  showQuestion();
 }
 
 function showQuestion() {
@@ -78,12 +197,18 @@ function showQuestion() {
   optionA.textContent = item.a;
   optionB.textContent = item.b;
 
+  optionA.disabled = false;
+  optionB.disabled = false;
+
   optionA.onclick = () => checkAnswer(item.a);
   optionB.onclick = () => checkAnswer(item.b);
 }
 
 function checkAnswer(answer) {
   const item = words[currentQuestion];
+
+  optionA.disabled = true;
+  optionB.disabled = true;
 
   if (answer === item.correct) {
     score++;
@@ -92,6 +217,11 @@ function checkAnswer(answer) {
   } else {
     feedback.textContent = `Неправильно. Верно: ${item.correct}`;
     feedback.className = "wrong";
+
+    mistakes.push({
+      selected: answer,
+      correct: item.correct
+    });
   }
 
   setTimeout(() => {
@@ -102,7 +232,7 @@ function checkAnswer(answer) {
     } else {
       showResult();
     }
-  }, 900);
+  }, 1000);
 }
 
 function showResult() {
@@ -118,14 +248,34 @@ function showResult() {
   } else {
     resultText.textContent = "Пока слабовато. Но это легко натренировать.";
   }
+
+  showMistakes();
+}
+
+function showMistakes() {
+  if (!mistakesList) return;
+
+  if (mistakes.length === 0) {
+    mistakesList.innerHTML = `
+      <div class="mistake good">
+        Ошибок нет. Красавчик ✅
+      </div>
+    `;
+    return;
+  }
+
+  mistakesList.innerHTML = mistakes.map((mistake) => {
+    return `
+      <div class="mistake">
+        <div>Ты выбрал: <span class="bad-answer">${mistake.selected}</span></div>
+        <div>Правильно: <span class="good-answer">${mistake.correct}</span></div>
+      </div>
+    `;
+  }).join("");
 }
 
 function restartQuiz() {
-  currentQuestion = 0;
-  score = 0;
-  result.classList.add("hidden");
-  quiz.classList.remove("hidden");
-  showQuestion();
+  startQuiz();
 }
 
-showQuestion();
+startQuiz();
